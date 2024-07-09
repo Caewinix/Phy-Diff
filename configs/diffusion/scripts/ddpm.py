@@ -49,7 +49,7 @@ def train_data_getter(config):
         base_images = data[1].to(device)
         b_vectors = data[3].to(device)
         position_index = data[2].to(device)
-        return images, base_images, b_vectors, position_index
+        return images, base_images, b_vectors
     return wrapper
 
 def test_data_getter(config):
@@ -57,7 +57,7 @@ def test_data_getter(config):
         base_images = data[1].to(device)
         b_vectors = data[3].to(device)
         position_index = data[2].to(device)
-        return base_images, b_vectors, position_index
+        return base_images, b_vectors
     return wrapper
 
 def test_comparison_getter(config):
