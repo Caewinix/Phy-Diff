@@ -3,7 +3,7 @@ import numpy as np
 import torch_ext as te
 from foundation.modules.modules import *
 from foundation.modules.attention import NeighborhoodTransformerLayer, GlobalTransformerLayer
-from foundation.running.util.normalization import normalize_across_origin, normalize_positive
+from foundation.running.utils.normalization import normalize_across_origin, normalize_positive
 
 print(__name__)
 
@@ -38,17 +38,38 @@ def layer_block_builders(config):
         4: lambda context: SelectiveNeighborhoodTransformerLayer(context.width, context.width, 64, mapping_width, 7, 0., cond_index=None),
     }
 
+class MLP(nn.Module):
+    def __init__(self, vector_length: int, d_model: int, dim: int, dropout = 0, input_dim: int = 1):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(input_dim, input_dim),
+            nn.ReLU(),
+            nn.Linear(input_dim, d_model)
+        )
+        self.dropout = nn.Dropout(p=dropout)
+        self.final = FlattenSequential(
+            [nn.Linear(d_model * vector_length, dim),
+                nn.ReLU(),
+                nn.Linear(dim, dim)],
+            1
+        )
+    
+    def forward(self, x: torch.Tensor):
+        if len(x.shape) < 3:
+            x = x.unsqueeze(-1)
+        x = self.layers(x)
+        x = self.dropout(x)
+        return self.final(x)
+
 def guidence_modules(config):
     mapping_width = config.model.backbone.parameters.mapping_width
-    return [VectorEmbedding(4, mapping_width, mapping_width),
-            ContinuityEmbedding(110, mapping_width, mapping_width)]
+    return [MLP(4, mapping_width, mapping_width)]
 
 def train_data_getter(config):
     def wrapper(data: tuple, device: torch.device):
         images = data[0].to(device)
         base_images = data[1].to(device)
         b_vectors = data[3].to(device)
-        position_index = data[2].to(device)
         return images, base_images, b_vectors
     return wrapper
 
@@ -56,7 +77,6 @@ def test_data_getter(config):
     def wrapper(data: tuple, device: torch.device):
         base_images = data[1].to(device)
         b_vectors = data[3].to(device)
-        position_index = data[2].to(device)
         return base_images, b_vectors
     return wrapper
 
