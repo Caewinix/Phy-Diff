@@ -1,0 +1,49 @@
+script: configs.adapter.scripts.default
+
+model:
+  device:
+    type: 'cuda'
+    id: [0]
+  backbone:
+    package: foundation.modules.models.adapter
+    type: Adapter
+    parameters:
+      in_channels: 42
+      channels: [128, 256, 512]
+      num_resnet_block: 2
+      kernel_size: 1
+      downscale_factor: 4
+      skep: True
+      use_conv: False
+
+train:
+  batch_size: 32
+  num_workers: 8
+  epochs: 288
+  grad_clip: 1.
+  scheduler_multiplier: 1.
+  gradient_accumulation_steps: 1
+  mixed_precision: "bf16"
+  use_accelerator: True
+  ema_decay: null
+  step_interval: null
+  resume: True
+  adapter_condition_getter:
+    script: True
+    args: []
+  optimizer:
+    package: torch.optim
+    type: AdamW
+    parameters:
+      lr: 5.e-4
+      weight_decay: 1.e-4
+      betas: [0.9, 0.95]
+      eps: 1.e-8
+
+test:
+  load_weight: 
+
+checkpoints_dir: './saving_checkpoints/adapter/default'
+
+log:
+  path: './logs/adapter/default'
