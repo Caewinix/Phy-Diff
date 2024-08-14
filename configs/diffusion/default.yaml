@@ -1,0 +1,161 @@
+script: configs.diffusion.scripts.default
+
+adapter:
+  enabled: False
+  config_path: 'default'
+  load_weight: null
+
+model:
+  device:
+    type: 'cuda'
+    id: [0]
+  backbone:
+    package: foundation.modules.models.hdit
+    type: HDiT
+    parameters:
+      in_channels: 1
+      out_channels: 1
+      concat_channels: 1
+      patch_size: [4, 4]
+      widths: [128, 256]
+      middle_width: 512
+      depths: [2, 2]
+      middle_depth: 4
+      layer_block_builders:
+        script: True
+        args: []
+      mapping_width: 256
+      mapping_depth: 2
+      mapping_dim_feed_forward: 256
+      mapping_dropout: 0.
+      is_layer_cond_module_prior: True
+      layer_cond_init_modules: null
+      layer_cond_guidence_modules: null
+      guidence_modules:
+        script: True
+        args: []
+  diffusion:
+    package: foundation.diffusion
+    parameters:
+      beta_1: 1.e-4
+      beta_T: 0.02
+      T: 1000
+      alpha_gap: 1.e-3
+    diffuser_type: StructureDiffuser
+    sampler_type: StructureDDPMSampler
+
+train:
+  batch_size: 48
+  num_workers: 4
+  epochs: 288
+  grad_clip: 1.
+  scheduler_multiplier: 1.
+  gradient_accumulation_steps: 1
+  mixed_precision: "bf16"
+  use_accelerator: True
+  ema_decay: null
+  step_interval: null
+  load_weight: null
+  resume: True
+  data_getter:
+    script: True
+    name: train_data_getter
+    args: []
+  optimizer:
+    package: torch.optim
+    type: AdamW
+    parameters:
+      lr: 5.e-4
+      weight_decay: 1.e-4
+      betas: [0.9, 0.95]
+      eps: 1.e-8
+
+val:
+  batch_size: 48
+  num_workers: 4
+  start_epoch: 40
+  first_data_number: 48
+  start_step: null
+  mixed_precision: False
+  data_getter:
+    script: True
+    name: test_data_getter
+    args: []
+  comparison_getter:
+    script: True
+    name: test_comparison_getter
+    args: []
+  initial_state_getter:
+    script: True
+    name: test_initial_state_getter
+    args: []
+  initial_noise_strength: 0.8
+  sampled_images_transform:
+    script: True
+    args: []
+
+test:
+  batch_size: 48
+  num_workers: 4
+  first_data_number: 48
+  mixed_precision: False
+  load_weight: 
+  data_getter:
+    script: True
+    name: test_data_getter
+    args: []
+  comparison_getter:
+    script: True
+    name: test_comparison_getter
+    args: []
+  initial_state_getter:
+    script: True
+    name: test_initial_state_getter
+    args: []
+  initial_noise_strength: 0.8
+  sampled_images_transform:
+    script: True
+    args: []
+  sampled_images_saving_path: './sampled_images/default.png'
+  n_rows: 8
+
+checkpoints_dir: './saving_checkpoints/diffusion/default'
+
+dataset:
+  package: dmri_data.dataset
+  type: DmriDataset
+  mode:
+    train:
+      args: ['./preprocessed/train/diffusion_images', './preprocessed/train/base_images', './preprocessed/train/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
+      kwargs:
+        restricted_slice_range: [25, 80]
+        transform:
+          script: True
+        adc_atlases_transform:
+          script: True
+        vector_transform:
+          script: True
+    val:
+      args: ['./preprocessed/evaluate/diffusion_images/val', './preprocessed/evaluate/base_images/val', './preprocessed/evaluate/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
+      kwargs:
+        restricted_slice_range: [25, 80]
+        transform:
+          script: True
+        adc_atlases_transform:
+          script: True
+        vector_transform:
+          script: True
+    test:
+      args: ['./preprocessed/evaluate/diffusion_images/test', './preprocessed/evaluate/base_images/test', './preprocessed/evaluate/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
+      kwargs:
+        restricted_slice_range: [25, 80]
+        restricted_b_value: null
+        transform:
+          script: True
+        adc_atlases_transform:
+          script: True
+        vector_transform:
+          script: True
+
+log:
+  path: './logs/default'
