@@ -126,7 +126,6 @@ dataset:
     train:
       args: ['./preprocessed/train/diffusion_images', './preprocessed/train/base_images', './preprocessed/train/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
       kwargs:
-        restricted_slice_range: [25, 80]
         transform:
           script: True
         adc_atlases_transform:
@@ -136,7 +135,6 @@ dataset:
     val:
       args: ['./preprocessed/evaluate/diffusion_images/val', './preprocessed/evaluate/base_images/val', './preprocessed/evaluate/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
       kwargs:
-        restricted_slice_range: [25, 80]
         transform:
           script: True
         adc_atlases_transform:
@@ -146,7 +144,6 @@ dataset:
     test:
       args: ['./preprocessed/evaluate/diffusion_images/test', './preprocessed/evaluate/base_images/test', './preprocessed/evaluate/dmri_adc_atlases/adc_atlases.npk', './preprocessed/xtract_atlases.npy']
       kwargs:
-        restricted_slice_range: [25, 80]
         restricted_b_value: null
         transform:
           script: True
